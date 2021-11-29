@@ -1,0 +1,6 @@
+venv
+.pytest_cache
+archive_code
+Analysis_*
+__pycache__
+output/Analysis_*

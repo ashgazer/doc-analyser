@@ -1,7 +1,11 @@
-from report_generator import create_reports, create_final_report
+from report_generator import (
+    create_reports,
+    create_final_report,
+    UnableToCreateReportError,
+)
 from tempfile import NamedTemporaryFile
 from unittest import mock
-
+import pytest
 from freezegun import freeze_time
 from processing import WordMetaData
 
@@ -31,6 +35,10 @@ class TestCreateReports:
             },
         ]
 
+    def test_create_reports_raises_unable_to_create_report_error(self):
+        with pytest.raises(UnableToCreateReportError):
+            create_reports([])
+
 
 class TestCreateFinalReport:
     @freeze_time("2020-01-01 12:00")
@@ -49,7 +57,9 @@ class TestCreateFinalReport:
                 }
             },
         ]
+
         result = create_final_report(reports)
+        assert result is None
 
         mock_pd.DataFrame.assert_called_with(
             [
@@ -72,4 +82,6 @@ class TestCreateFinalReport:
             "output/Analysis_2020-01-01-12-00.csv", index=False
         )
 
-        assert result is None
+    def test_create_final_report_raises_unable_to_create_report_error(self):
+        with pytest.raises(UnableToCreateReportError):
+            create_final_report([])

@@ -9,6 +9,10 @@ import pandas as pd
 from processing import WordProcessor, DocProcessor, WordMetaData
 
 
+class UnableToCreateReportError(Exception):
+    "Return Exception when creation of report fails"
+
+
 @dataclass
 class Report:
     count: int = 0
@@ -23,33 +27,38 @@ def get_report_name() -> str:
 
 def create_final_report(reports: List[Any]) -> None:
     temp = defaultdict(Report)
+    try:
+        for report in reports:
+            for doc, analysis in report.items():
+                for word, metadata in analysis.items():
+                    temp[word].count += metadata.count
+                    temp[word].docs.add(doc)
+                    temp[word].sentence.append(metadata.sentence)
 
-    for report in reports:
-        for doc, analysis in report.items():
-            for word, metadata in analysis.items():
-                temp[word].count += metadata.count
-                temp[word].docs.add(doc)
-                temp[word].sentence.append(metadata.sentence)
-
-    df = pd.DataFrame([{**asdict(i), **{"word": k}} for k, i in temp.items()])
-    df = df[["word", "count", "docs", "sentence"]]
-    df.sort_values(by=['count'], inplace=True, ascending=False)
-    df.to_csv(get_report_name(), index=False)
+        df = pd.DataFrame([{**asdict(i), **{"word": k}} for k, i in temp.items()])
+        df = df[["word", "count", "docs", "sentence"]]
+        df.sort_values(by=["count"], inplace=True, ascending=False)
+        df.to_csv(get_report_name(), index=False)
+    except Exception as error:
+        raise UnableToCreateReportError(f"{error}")
 
 
 def create_reports(
     documents: Dict[str, str]
 ) -> List[Dict[str, Dict[str, WordMetaData]]]:
     reports = []
+    try:
+        for name, path in documents.items():
+            with open(path, "r") as f:
+                data = f.read()
 
-    for name, path in documents.items():
-        with open(path, "r") as f:
-            data = f.read()
+            word_processor = WordProcessor(data)
+            words = word_processor.run()
 
-        word_processor = WordProcessor(data)
-        words = word_processor.run()
+            doc_processor = DocProcessor(data, words, name)
 
-        doc_processor = DocProcessor(data, words, name)
+            reports.append(doc_processor.run())
+        return reports
 
-        reports.append(doc_processor.run())
-    return reports
+    except Exception as error:
+        raise UnableToCreateReportError(f"{error}")

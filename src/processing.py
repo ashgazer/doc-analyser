@@ -20,7 +20,6 @@ class WordProcessor:
         self.nlp = spacy.load("en_core_web_md")
         spacy.util.fix_random_seed(42)
 
-
     def _get_unique_words(self, text: str) -> List[str]:
         return list(map(lambda x: x.lower(), set(re.findall(r"[\w']+", text))))
 
@@ -53,7 +52,7 @@ class DocProcessor:
         words = re.findall(r"[\w']+", str(sentence))
         return words.count(word)
 
-    def run(self) -> Dict[str,Dict[str,WordMetaData]]:
+    def run(self) -> Dict[str, Dict[str, WordMetaData]]:
         for word in self.words:
             for line in self.doc.sents:
                 if word in str(line):
